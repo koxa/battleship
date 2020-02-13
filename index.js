@@ -1,19 +1,25 @@
-const SHIP_HIT = Symbol();
-const SHIP_MISS = Symbol();
-const SHIP_ALREADY_ATTACKED = Symbol();
-const SHIP_SUNK = Symbol();
+const SHIP_HIT = 'ship_hit';
+const SHIP_MISS = 'ship_miss';
+const SHIP_ALREADY_ATTACKED = 'ship_already_attacked';
+const SHIP_SUNK = 'ship_sunk';
 
 class Battleship {
-    constructor(maxX, maxY, ships = [5, 4, 3, 2, 1]) {
-        this.board = new Board(maxX, maxY, ships);
-        console.log(this.board);
+    constructor(maxX, maxY, shipSizes = [5, 4, 3, 2, 1]) {
+        this.board = new Board(maxX, maxY, shipSizes);
+        this.totalShips = shipSizes.length;
+        this.totalSunk = 0;
+        this.won = false;
         this.board.printBoard();
     }
 
     attack(x, y) { // convert 1:maxX to 0:maxX-1
+        if (this.won) {
+            console.log('GAME ALREADY WON. IGNORING');
+            return;
+        }
         x = x - 1;
         y = y - 1;
-        const ship = this.board[x][y]; // get reference to ship if available
+        const ship = this.board.getShip(x, y); // get reference to ship if available
         if (ship) {
             const result = ship.hit(x, y); // hit ship's body
             switch (result) {
@@ -25,6 +31,14 @@ class Battleship {
                     break;
                 case SHIP_SUNK:
                     console.log('SHIP SUNK');
+                    this.totalSunk++;
+                    if (this.totalShips === this.totalSunk) {
+                        this.won = true;
+                        console.log('WIN');
+                    }
+                    break;
+                default:
+                    console.log('something else', result);
             }
         } else {
             console.log('SHIP MISS');
@@ -57,6 +71,10 @@ class Board {
         }
     }
 
+    getShip(x, y) {
+        return this.board[x][y] instanceof Ship ? this.board[x][y] : null;
+    }
+
     generateShips(shipSizes) {
         if (!this.board.length || !this.board[0].length) {
             throw new Error('There should be at least 1 cell in a board');
@@ -74,7 +92,7 @@ class Board {
     }
 
     genShip(shipLen, retries = 0) {
-        //todo: check whether there is enough space left on board to fit new ship
+        //todo: check whether there is enough space left on board to fit new ship, otherwise stop generation
         const startX = Math.floor(Math.random() * this.maxX); // 0 to 9
         const startY = Math.floor(Math.random() * this.maxY); // 0 to 9
         const dir = Math.random() >= 0.5; // random direction; true = add X, false = add Y
@@ -141,12 +159,12 @@ class Ship {
                 return this.dir ? x - this.startX : y - this.startY;
             }
         }
-        return false;
+        return -1;
     }
 
     hit(x, y) {
         const hitIndex = this.getXYIndex(x, y);
-        if (!hitIndex) {
+        if (hitIndex < 0) {
             return SHIP_MISS;
         }
         const val = this.body[hitIndex];
@@ -171,7 +189,11 @@ class Ship {
     }
 }
 
-
-const BS = new Battleship(5, 5);
-console.log('row 1:', BS.board[1]);
-BS.attack(1, 1);
+//SAMPLE GAME 10X10, 5 ships with sizes 5,4,3,2,1
+const BS = new Battleship(10, 10, [5, 4, 3, 2, 1]);
+// ATTACKING EACH CELL
+for (let i = 0; i < 10; i++) {
+    for (let n = 0; n < 10; n++) {
+        BS.attack(i + 1, n + 1);
+    }
+}
