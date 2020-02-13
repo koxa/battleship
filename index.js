@@ -4,6 +4,9 @@ const SHIP_ALREADY_ATTACKED = 'ship_already_attacked';
 const SHIP_SUNK = 'ship_sunk';
 const GAME_WON = 'game_won';
 
+/**
+ * @author koxa Constantine P
+ */
 class Battleship {
     /**
      * Builds instance of BattleShip Game
