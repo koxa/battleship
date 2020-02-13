@@ -5,6 +5,11 @@ const SHIP_SUNK = 'ship_sunk';
 
 class Battleship {
     constructor(maxX, maxY, shipSizes = [5, 4, 3, 2, 1]) {
+        const totalCells = maxX * maxY;
+        const totalShipCells = shipSizes.reduce((num, acc) => acc + num, 0);
+        if (totalCells < totalShipCells) {
+            throw new Error('Board size is smaller than total ship sizes');
+        }
         this.board = new Board(maxX, maxY, shipSizes);
         this.totalShips = shipSizes.length;
         this.totalSunk = 0;
@@ -93,12 +98,13 @@ class Board {
 
     genShip(shipLen, retries = 0) {
         //todo: check whether there is enough space left on board to fit new ship, otherwise stop generation
+        //todo: gap between ships
         const startX = Math.floor(Math.random() * this.maxX); // 0 to 9
         const startY = Math.floor(Math.random() * this.maxY); // 0 to 9
         const dir = Math.random() >= 0.5; // random direction; true = add X, false = add Y
         const checkPos = dir ? startX : startY;
         const checkMax = dir ? this.maxX : this.maxY;
-        // check if ship can fit into board
+        // check if ship can fit into row/column
         if (checkPos + shipLen > checkMax) {
             return this.genShip(shipLen, ++retries);
         } else {
